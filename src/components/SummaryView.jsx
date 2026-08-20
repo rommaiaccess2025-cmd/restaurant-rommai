@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { List, TrendingUp, Search, BarChart3, LineChart as LineChartIcon, ArrowLeft } from 'lucide-react';
+import { List, TrendingUp, Search, BarChart3, LineChart as LineChartIcon, ArrowLeft, Receipt, ChevronDown, ChevronUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts';
 
 export default function SummaryView({ 
@@ -11,6 +11,7 @@ export default function SummaryView({
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'graph' | 'trend'
   const [selectedItem, setSelectedItem] = useState(null); // สำหรับกราฟแนวโน้มเฉพาะรายการ
+  const [expandedBills, setExpandedBills] = useState({}); // เก็บสถานะการเปิด/ปิดดูรายละเอียดบิล
 
   const filteredItems = summaryData.items.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -105,13 +106,19 @@ export default function SummaryView({
           <div className="flex bg-gray-200 p-1 rounded-xl self-start sm:self-auto shrink-0 shadow-inner">
             <button 
               onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${viewMode === 'list' ? 'bg-white shadow text-orange-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${viewMode === 'list' ? 'bg-white shadow text-orange-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <List size={16} /> รายการ
             </button>
             <button 
+              onClick={() => setViewMode('bill')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${viewMode === 'bill' ? 'bg-white shadow text-orange-600' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              <Receipt size={16} /> บิล
+            </button>
+            <button 
               onClick={() => setViewMode('graph')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${viewMode === 'graph' ? 'bg-white shadow text-orange-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${viewMode === 'graph' ? 'bg-white shadow text-orange-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <BarChart3 size={16} /> ภาพรวม
             </button>
@@ -174,6 +181,86 @@ export default function SummaryView({
                 <div className="p-10 text-center text-gray-400 flex flex-col items-center gap-2">
                   <Search size={32} className="text-gray-300" />
                   <p>ไม่พบรายการวัตถุดิบที่ค้นหา</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {viewMode === 'bill' && (
+          <>
+            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="font-bold text-gray-700 flex items-center gap-2">
+                <Receipt size={18} className="text-orange-500" />
+                สรุปแยกตามเลขที่บิล
+              </h3>
+              <span className="text-xs font-medium bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                {summaryData.bills.length} บิล
+              </span>
+            </div>
+            
+            <div className="divide-y divide-gray-100 max-h-[60vh] overflow-y-auto">
+              {summaryData.bills.length > 0 ? (
+                summaryData.bills.map((bill) => (
+                  <div key={bill.id} className="flex flex-col">
+                    {/* Bill Header */}
+                    <div 
+                      className="p-4 flex items-center justify-between hover:bg-orange-50 cursor-pointer transition-colors"
+                      onClick={() => setExpandedBills(prev => ({ ...prev, [bill.id]: !prev[bill.id] }))}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shrink-0 shadow-sm border border-orange-200">
+                          <Receipt size={20} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800 text-sm sm:text-base flex items-center gap-2">
+                            {bill.billNumber}
+                            {bill.id.startsWith('NO_BILL') && (
+                              <span className="text-[10px] font-normal bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">
+                                รวมรายการที่ไม่ได้ระบุบิล
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            วันที่: {new Date(bill.date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric'})} • {bill.items.length} รายการ
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex items-center gap-3">
+                        <p className="font-bold text-orange-600">฿{bill.totalCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}</p>
+                        {expandedBills[bill.id] ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+                      </div>
+                    </div>
+                    
+                    {/* Bill Items (Expanded) */}
+                    {expandedBills[bill.id] && (
+                      <div className="bg-gray-50/50 px-4 py-3 border-t border-gray-100">
+                        <table className="w-full text-sm text-left">
+                          <thead>
+                            <tr className="text-gray-500 border-b border-gray-200">
+                              <th className="pb-2 font-medium">รายการ</th>
+                              <th className="pb-2 font-medium text-right">จำนวน</th>
+                              <th className="pb-2 font-medium text-right">ราคา</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {bill.items.map(item => (
+                              <tr key={item.id}>
+                                <td className="py-2 text-gray-700">{item.name}</td>
+                                <td className="py-2 text-gray-600 text-right">{item.quantity} {item.unit}</td>
+                                <td className="py-2 text-gray-800 font-medium text-right">฿{item.price.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="p-10 text-center text-gray-400 flex flex-col items-center gap-2">
+                  <Receipt size={32} className="text-gray-300" />
+                  <p>ไม่มีข้อมูลบิลในช่วงเวลานี้</p>
                 </div>
               )}
             </div>

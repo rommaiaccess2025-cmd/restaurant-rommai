@@ -168,9 +168,30 @@ export default function App() {
       history: item.history.sort((a, b) => new Date(a.date) - new Date(b.date))
     })).sort((a, b) => b.totalCost - a.totalCost); // เรียงตามยอดจ่ายรวม
 
+    // จัดกลุ่มตามบิล
+    const groupedByBill = filtered.reduce((acc, item) => {
+      // ถ้าไม่มีเลขที่บิล ให้จับกลุ่มตามวันที่แทน เพื่อไม่ให้ไปรวมกันมั่ว
+      const billKey = item.billNumber || `NO_BILL_${item.date}`; 
+      if (!acc[billKey]) {
+        acc[billKey] = {
+          id: billKey,
+          billNumber: item.billNumber || 'ไม่มีเลขที่บิล',
+          date: item.date,
+          totalCost: 0,
+          items: []
+        };
+      }
+      acc[billKey].totalCost += item.price;
+      acc[billKey].items.push(item);
+      return acc;
+    }, {});
+
+    const sortedBills = Object.values(groupedByBill).sort((a, b) => new Date(b.date) - new Date(a.date));
+
     return {
       totalExpense,
       items: sortedGroupedItems,
+      bills: sortedBills,
     };
   }, [entries, filterMode, filterMonth, filterYear]);
 
