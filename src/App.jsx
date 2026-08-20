@@ -12,6 +12,16 @@ export default function App() {
   // -----------------------------------------
   const [activeTab, setActiveTab] = useState('record'); 
   
+  // อัปเดต Document Title ตามเมนูที่เลือก
+  useEffect(() => {
+    const pageTitles = {
+      'record': 'บันทึกรายการ | ระบบจัดซื้อร้านร่มไม้',
+      'summary': 'สรุปยอด | ระบบจัดซื้อร้านร่มไม้',
+      'analytics': 'วิเคราะห์รายตัว | ระบบจัดซื้อร้านร่มไม้'
+    };
+    document.title = pageTitles[activeTab] || 'ระบบจัดซื้อ | ร้านร่มไม้';
+  }, [activeTab]);
+
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
