@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Package, TrendingUp, TrendingDown, DollarSign, Activity, LineChart as LineChartIcon } from 'lucide-react';
 
@@ -18,14 +18,41 @@ export default function AnalyticsView({ entries }) {
     uniqueItems.length > 0 ? `${uniqueItems[0].name}|${uniqueItems[0].unit}` : ''
   );
 
+  // ดึงรายการปีทั้งหมดที่มีข้อมูล
+  const availableYears = useMemo(() => {
+    const years = new Set(entries.map(e => new Date(e.date).getFullYear()));
+    if (years.size === 0) return [new Date().getFullYear()];
+    return Array.from(years).sort((a, b) => b - a);
+  }, [entries]);
+
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('ALL');
+
+  // ตั้งค่าเริ่มต้นของปีให้เป็นปีล่าสุด
+  useEffect(() => {
+    if (!selectedYear && availableYears.length > 0) {
+      setSelectedYear(availableYears[0].toString());
+    }
+  }, [availableYears, selectedYear]);
+
   // คำนวณสถิติและเตรียมข้อมูลกราฟสำหรับวัตถุดิบที่เลือก
   const itemStats = useMemo(() => {
     if (!selectedKey || entries.length === 0) return null;
     
     const [name, unit] = selectedKey.split('|');
-    // กรองเอาเฉพาะวัตถุดิบที่เลือก และเรียงวันที่จากอดีต -> ปัจจุบัน
+    // กรองเอาเฉพาะวัตถุดิบที่เลือก + ตัวกรองปี/เดือน และเรียงวันที่จากอดีต -> ปัจจุบัน
     const itemEntries = entries
       .filter(e => e.name === name && e.unit === unit)
+      .filter(e => {
+        const d = new Date(e.date);
+        const y = d.getFullYear().toString();
+        const m = (d.getMonth() + 1).toString();
+        
+        if (selectedYear && selectedYear !== 'ALL' && y !== selectedYear) return false;
+        if (selectedMonth !== 'ALL' && m !== selectedMonth) return false;
+        
+        return true;
+      })
       .sort((a, b) => new Date(a.date) - new Date(b.date));
     
     if (itemEntries.length === 0) return null;
@@ -61,7 +88,7 @@ export default function AnalyticsView({ entries }) {
     return {
       name, unit, minPrice, maxPrice, avgPrice, totalCost, totalQty, chartData, purchaseCount: itemEntries.length
     };
-  }, [entries, selectedKey]);
+  }, [entries, selectedKey, selectedYear, selectedMonth]);
 
   if (entries.length === 0) {
     return (
@@ -75,26 +102,69 @@ export default function AnalyticsView({ entries }) {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
       
-      {/* ตัวเลือกวัตถุดิบ */}
+      {/* ส่วนควบคุม: เลือกวัตถุดิบ และ ตัวกรอง */}
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-        <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+        <label className="block text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
           <Activity className="text-orange-500" size={18} /> 
-          เลือกวัตถุดิบที่ต้องการเจาะลึก
+          เลือกวัตถุดิบและช่วงเวลาที่ต้องการวิเคราะห์
         </label>
-        <select 
-          value={selectedKey}
-          onChange={(e) => setSelectedKey(e.target.value)}
-          className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-500 font-medium"
-        >
-          {uniqueItems.map(item => (
-            <option key={`${item.name}|${item.unit}`} value={`${item.name}|${item.unit}`}>
-              {item.name} (หน่วย: {item.unit})
-            </option>
-          ))}
-        </select>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* เลือกวัตถุดิบ */}
+          <div className="md:col-span-1">
+            <label className="block text-xs font-semibold text-gray-500 mb-2">วัตถุดิบ (Item)</label>
+            <select 
+              value={selectedKey}
+              onChange={(e) => setSelectedKey(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-500 font-medium"
+            >
+              {uniqueItems.map(item => (
+                <option key={`${item.name}|${item.unit}`} value={`${item.name}|${item.unit}`}>
+                  {item.name} (หน่วย: {item.unit})
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* เลือกปี */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">ปี (Year)</label>
+            <select 
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-500 font-medium"
+            >
+              <option value="ALL">ทุกปี</option>
+              {availableYears.map(year => (
+                <option key={year} value={year.toString()}>ปี {year}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* เลือกเดือน */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-2">เดือน (Month)</label>
+            <select 
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-500 font-medium"
+            >
+              <option value="ALL">ทุกเดือน</option>
+              {[...Array(12)].map((_, i) => (
+                <option key={i+1} value={(i+1).toString()}>
+                  {new Date(2000, i, 1).toLocaleDateString('th-TH', { month: 'long' })}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
-      {itemStats && (
+      {!itemStats ? (
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center text-gray-400 mt-4">
+          <p>ไม่มีข้อมูลสำหรับช่วงเวลาที่เลือก</p>
+        </div>
+      ) : (
         <>
           {/* ข้อมูลสถิติ (Cards) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
