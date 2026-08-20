@@ -18,9 +18,8 @@ export default function AnalyticsView({ entries }) {
   const [selectedKey, setSelectedKey] = useState(
     uniqueItems.length > 0 ? `${uniqueItems[0].name}|${uniqueItems[0].unit}` : ''
   );
-  const [searchTerm, setSearchTerm] = useState(
-    uniqueItems.length > 0 ? `${uniqueItems[0].name} (หน่วย: ${uniqueItems[0].unit})` : ''
-  );
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
   // ดึงรายการปีทั้งหมดที่มีข้อมูล
   const availableYears = useMemo(() => {
@@ -123,7 +122,7 @@ export default function AnalyticsView({ entries }) {
                 type="text" 
                 list="analytics-items"
                 placeholder="พิมพ์ค้นหา หรือเลือก..."
-                value={searchTerm}
+                value={isFocused ? searchTerm : (selectedKey ? `${selectedKey.split('|')[0]} (หน่วย: ${selectedKey.split('|')[1]})` : '')}
                 onChange={(e) => {
                   const val = e.target.value;
                   setSearchTerm(val);
@@ -132,7 +131,13 @@ export default function AnalyticsView({ entries }) {
                     setSelectedKey(`${match.name}|${match.unit}`);
                   }
                 }}
-                onFocus={(e) => e.target.select()}
+                onFocus={() => {
+                  setSearchTerm('');
+                  setIsFocused(true);
+                }}
+                onBlur={() => {
+                  setIsFocused(false);
+                }}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-medium"
               />
               <datalist id="analytics-items">
