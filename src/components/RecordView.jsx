@@ -1,10 +1,33 @@
-import React from 'react';
-import { PlusCircle, Calendar, DollarSign, Receipt, Package, Clock } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { PlusCircle, Calendar, DollarSign, Receipt, Package, Clock, TrendingUp } from 'lucide-react';
 
 export default function RecordView({ formData, handleInputChange, handleSubmit, entries, handleDelete }) {
   
   // สกัดชื่อวัตถุดิบที่ไม่ซ้ำกันจากประวัติ เพื่อนำมาทำเป็นตัวเลือก (Autocomplete)
   const uniqueNames = [...new Set(entries.map(item => item.name))].filter(Boolean);
+
+  // คำนวณยอดสะสมของเดือนปัจจุบัน สำหรับวัตถุดิบที่กำลังพิมพ์
+  const currentItemStats = useMemo(() => {
+    if (!formData.name) return null;
+    
+    const currentMonth = formData.date.substring(0, 7); // yyyy-mm
+    const matchedEntries = entries.filter(e => 
+      e.name.toLowerCase() === formData.name.toLowerCase() && 
+      e.date.startsWith(currentMonth)
+    );
+    
+    if (matchedEntries.length === 0) return null;
+    
+    const totalQty = matchedEntries.reduce((sum, item) => sum + item.quantity, 0);
+    const totalCost = matchedEntries.reduce((sum, item) => sum + item.price, 0);
+    const unit = matchedEntries[0].unit; // อ้างอิงหน่วยล่าสุด
+    
+    return {
+      totalQty,
+      totalCost,
+      unit
+    };
+  }, [formData.name, formData.date, entries]);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -72,6 +95,15 @@ export default function RecordView({ formData, handleInputChange, handleSubmit, 
                   ))}
                 </datalist>
               </div>
+              {/* แสดงยอดสะสมเดือนนี้ */}
+              {currentItemStats && (
+                <div className="mt-2 text-[11px] sm:text-xs text-orange-700 bg-orange-50 px-3 py-2 rounded-lg border border-orange-100 flex items-center gap-1.5 animate-in fade-in">
+                  <TrendingUp size={14} className="shrink-0" />
+                  <span>
+                    เดือนนี้ซื้อ <strong>{formData.name}</strong> ไปแล้ว <strong>{currentItemStats.totalQty.toLocaleString()} {currentItemStats.unit}</strong> (รวม <strong>฿{currentItemStats.totalCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}</strong>)
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
