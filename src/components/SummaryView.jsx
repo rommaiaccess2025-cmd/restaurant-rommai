@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { List, TrendingUp, Search, BarChart3, LineChart as LineChartIcon, ArrowLeft } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, AreaChart, Area } from 'recharts';
 
 export default function SummaryView({ 
   filterMode, setFilterMode, 
@@ -200,9 +200,10 @@ export default function SummaryView({
                       cursor={{fill: '#fff7ed'}}
                     />
                     <Bar dataKey="ยอดใช้จ่าย" radius={[0, 4, 4, 0]} barSize={20}>
-                      {graphData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill="#f97316" /> 
-                      ))}
+                      {graphData.map((entry, index) => {
+                        const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#ef4444', '#6366f1', '#84cc16'];
+                        return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
+                      })}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -240,7 +241,13 @@ export default function SummaryView({
             {selectedItem.history.length > 0 ? (
               <div className="w-full h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={selectedItem.history} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
+                  <AreaChart data={selectedItem.history} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="colorPrice2" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                     <XAxis 
                       dataKey="date" 
@@ -258,15 +265,17 @@ export default function SummaryView({
                       formatter={(value) => ['฿' + value.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}), 'ราคาต่อหน่วย']}
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                     />
-                    <Line 
+                    <Area 
                       type="monotone" 
                       dataKey="pricePerUnit" 
                       stroke="#f97316" 
+                      fillOpacity={1} 
+                      fill="url(#colorPrice2)"
                       strokeWidth={3}
                       dot={{ r: 4, fill: '#f97316', strokeWidth: 2, stroke: '#fff' }}
                       activeDot={{ r: 6, strokeWidth: 0 }}
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             ) : (

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { Package, TrendingUp, TrendingDown, DollarSign, Activity, LineChart as LineChartIcon } from 'lucide-react';
 
 export default function AnalyticsView({ entries }) {
@@ -194,7 +194,13 @@ export default function AnalyticsView({ entries }) {
             </h3>
             <div className="w-full h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={itemStats.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart data={itemStats.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                   <XAxis 
                     dataKey="date" 
@@ -214,15 +220,17 @@ export default function AnalyticsView({ entries }) {
                     }}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Line 
+                  <Area 
                     type="monotone" 
                     dataKey="pricePerUnit" 
                     stroke="#3b82f6" // สีฟ้า
+                    fillOpacity={1}
+                    fill="url(#colorPrice)"
                     strokeWidth={3}
                     dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
                     activeDot={{ r: 6, strokeWidth: 0 }}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
