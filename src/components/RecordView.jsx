@@ -34,8 +34,24 @@ export default function RecordView({ formData, handleInputChange, handleSubmit, 
               </div>
             </div>
 
-            {/* ชื่อวัตถุดิบ */}
+            {/* เลขที่บิล (ถ้ามี) */}
             <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">เลขที่บิล (ไม่บังคับ)</label>
+              <div className="relative">
+                <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input 
+                  type="text" 
+                  name="billNumber"
+                  placeholder="เช่น INV-001, ใบเสร็จ..."
+                  value={formData.billNumber || ''}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none"
+                />
+              </div>
+            </div>
+
+            {/* ชื่อวัตถุดิบ */}
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-600 mb-1">ชื่อวัตถุดิบ</label>
               <div className="relative">
                 <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -131,7 +147,14 @@ export default function RecordView({ formData, handleInputChange, handleSubmit, 
           {entries.slice(0, 5).map(entry => (
             <div key={entry.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center group">
               <div className="flex flex-col">
-                <span className="font-semibold text-gray-800">{entry.name}</span>
+                <span className="font-semibold text-gray-800 flex items-center gap-2">
+                  {entry.name}
+                  {entry.billNumber && (
+                    <span className="text-[10px] font-normal bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded border border-orange-200 whitespace-nowrap">
+                      บิล: {entry.billNumber}
+                    </span>
+                  )}
+                </span>
                 <span className="text-xs text-gray-500">
                   {new Date(entry.date).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric'})} • {entry.quantity} {entry.unit}
                 </span>

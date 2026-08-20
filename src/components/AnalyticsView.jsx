@@ -197,8 +197,8 @@ export default function AnalyticsView({ entries }) {
                 <AreaChart data={itemStats.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
@@ -223,11 +223,11 @@ export default function AnalyticsView({ entries }) {
                   <Area 
                     type="monotone" 
                     dataKey="pricePerUnit" 
-                    stroke="#3b82f6" // สีฟ้า
+                    stroke="#f97316" // สีฟ้า
                     fillOpacity={1}
                     fill="url(#colorPrice)"
                     strokeWidth={3}
-                    dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
+                    dot={{ r: 4, fill: '#f97316', strokeWidth: 2, stroke: '#fff' }}
                     activeDot={{ r: 6, strokeWidth: 0 }}
                   />
                 </AreaChart>

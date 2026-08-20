@@ -28,6 +28,7 @@ export default function App() {
   const today = new Date().toISOString().split('T')[0];
   const [formData, setFormData] = useState({
     date: today,
+    billNumber: '',
     name: '',
     quantity: '',
     unit: 'กก.',
@@ -75,6 +76,7 @@ export default function App() {
 
     const newEntry = {
       date: formData.date,
+      billNumber: formData.billNumber || null,
       name: formData.name,
       quantity: parseFloat(formData.quantity),
       unit: formData.unit,
