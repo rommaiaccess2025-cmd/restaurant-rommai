@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { Package, TrendingUp, TrendingDown, DollarSign, Activity, LineChart as LineChartIcon } from 'lucide-react';
+import { Package, TrendingUp, TrendingDown, DollarSign, Activity, LineChart as LineChartIcon, Search } from 'lucide-react';
 import { getColorForItem } from '../utils';
 
 export default function AnalyticsView({ entries }) {
@@ -17,6 +17,9 @@ export default function AnalyticsView({ entries }) {
   // กำหนดค่าเริ่มต้นเป็นวัตถุดิบตัวแรกในระบบ (ถ้ามี)
   const [selectedKey, setSelectedKey] = useState(
     uniqueItems.length > 0 ? `${uniqueItems[0].name}|${uniqueItems[0].unit}` : ''
+  );
+  const [searchTerm, setSearchTerm] = useState(
+    uniqueItems.length > 0 ? `${uniqueItems[0].name} (หน่วย: ${uniqueItems[0].unit})` : ''
   );
 
   // ดึงรายการปีทั้งหมดที่มีข้อมูล
@@ -114,17 +117,30 @@ export default function AnalyticsView({ entries }) {
           {/* เลือกวัตถุดิบ */}
           <div className="md:col-span-1">
             <label className="block text-xs font-semibold text-gray-500 mb-2">วัตถุดิบ (Item)</label>
-            <select 
-              value={selectedKey}
-              onChange={(e) => setSelectedKey(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-500 font-medium"
-            >
-              {uniqueItems.map(item => (
-                <option key={`${item.name}|${item.unit}`} value={`${item.name}|${item.unit}`}>
-                  {item.name} (หน่วย: {item.unit})
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input 
+                type="text" 
+                list="analytics-items"
+                placeholder="พิมพ์ค้นหา หรือเลือก..."
+                value={searchTerm}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchTerm(val);
+                  const match = uniqueItems.find(item => `${item.name} (หน่วย: ${item.unit})` === val);
+                  if (match) {
+                    setSelectedKey(`${match.name}|${match.unit}`);
+                  }
+                }}
+                onFocus={(e) => e.target.select()}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-medium"
+              />
+              <datalist id="analytics-items">
+                {uniqueItems.map(item => (
+                  <option key={`${item.name}|${item.unit}`} value={`${item.name} (หน่วย: ${item.unit})`} />
+                ))}
+              </datalist>
+            </div>
           </div>
           
           {/* เลือกปี */}
